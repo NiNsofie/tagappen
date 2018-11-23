@@ -1,0 +1,86 @@
+
+<html>
+<head>
+	<title>Marieholmstågen</title>
+	<link href="/stylish.css" rel="stylesheet" type="text/css"/>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+		<p>Avgående tåg från Marieholms station:</p>
+		<div id="Dep"></div>
+		<script>
+
+//Parser för att kunna läsa xml som skånetrafikens sida var: https://www.w3schools.com/xml/xml_parser.asp
+//onreadystatechange är nog bs här och borde bytas till nåt som händer lite mer sällan?
+//ändrade från att loopa till Lines.length till att bara visa 5.
+//also groda
+//http-request i nodejs och exempel med chunks som jag använder i server.js: https://www.twilio.com/blog/2017/08/http-requests-in-node-js.html
+//http-request i javascript som här: https://medium.freecodecamp.org/here-is-the-most-popular-ways-to-make-an-http-request-in-javascript-954ce8c95aaa
+//lägg till dagar i snyggTid.
+
+
+function SnyggaDateTime(FulaDateTime){
+	var date = new Date(FulaDateTime);
+	var dateNow = Date.now();
+	var timeLeft = new Date(date-dateNow);
+	var snyggTid = '';
+	var trueTimeLeft = timeLeft.getHours()-1;
+	if(trueTimeLeft > 1){
+		snyggTid += trueTimeLeft + " timmar och ";
+	}
+	else if(trueTimeLeft == 1){
+		snyggTid += trueTimeLeft +  " timme och ";
+	}	
+	return snyggTid + timeLeft.getMinutes() + " minuter";
+}
+
+function getDeviations(Line){
+	var deviationList = [];
+	var deviations = Line.getElementsByTagName("Deviation");
+	for (var i = 0; i < deviations.length; i++){
+		var deviation = deviations[i];
+		//$("deviationList").append(deviation.getElementsByTagName("Details")[0].childNodes[0].nodevalue);
+		deviationList.push(deviation.getElementsByTagName("Details")[0].childNodes[0].nodeValue);
+	}
+	return deviationList;
+}
+
+function getProperty(property, From){
+	return From.getElementsByTagName(property)[0].childNodes[0].nodeValue;
+}
+
+function getData(){
+	var Http = new XMLHttpRequest();
+	Http.addEventListener("load", function(){
+		var parser, xmlDoc;
+		parser = new DOMParser();
+		xmlDoc = parser.parseFromString(this.responseText, "text/xml");	
+		var Lines = xmlDoc.getElementsByTagName("Line");
+		$("#Dep").html('');
+		for (i = 0; i < Lines.length; i++){
+			var Line = Lines[i];
+			var deviationList = getDeviations(Line);
+			var Departure = document.createElement( "div" );
+			$(Departure).addClass("row");
+			$(Departure).append( "<div class='Towards'>" + getProperty("Towards", Line) + "</div>" );
+			$(Departure).append( "<div class='Time'>" +  SnyggaDateTime(getProperty("JourneyDateTime", Line)) + "</div>" );
+			$( "#Dep" ).append(Departure);
+			for (j = 0; j < deviationList.length; j++){
+				$( "#JourneyDateTime" ).append( "<p class='deviations'>"+ deviationList[j] + "</p>" );
+			}
+		}
+	});
+	Http.open("GET", "http://78.67.18.188:8081/tagtider");
+	Http.send();
+}
+setInterval(getData, 30000);
+$(document).ready(getData);
+
+		</script>
+		<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Common_frog.jpg/1024px-Common_frog.jpg" alt="Froggieman" style="width:20%;height:20%"> 
+	</body>
+</html>
+

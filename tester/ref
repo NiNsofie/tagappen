@@ -1,0 +1,21 @@
+<script>
+
+var http = require('http')
+
+http.get('hhtp://www.labs.skanetrafiken.se/v2.2/stationresults.asp?selPointFrKey=85000', (resp) => {
+	let data = '';
+	resp.on('data', (chunk) => {
+		data += chunk;
+	});
+});	
+
+</script>
+
+<html>
+
+	<body>
+	<img  src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Common_frog.jpg/1024px-Common_frog.jpg"> 
+	</body>
+
+</html>
+
